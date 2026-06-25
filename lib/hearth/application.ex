@@ -15,6 +15,8 @@ defmodule Hearth.Application do
       # Start a worker by calling: Hearth.Worker.start_link(arg)
       # {Hearth.Worker, arg},
       # Start to serve requests, typically the last entry
+      {Registry, keys: :unique, name: Hearth.RoomRegistry},
+      {DynamicSupervisor, name: Hearth.RoomSupervisor, strategy: :one_for_one},
       HearthWeb.Endpoint
     ]
 

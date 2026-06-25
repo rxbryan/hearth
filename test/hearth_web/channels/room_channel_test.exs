@@ -15,9 +15,10 @@ defmodule HearthWeb.RoomChannelTest do
     assert_reply ref, :ok, %{"hello" => "there"}
   end
 
-  test "shout broadcasts to room:lobby", %{socket: socket} do
-    push(socket, "shout", %{"hello" => "all"})
-    assert_broadcast "shout", %{"hello" => "all"}
+  test "shout broadcasts to room:<name>", %{socket: socket} do
+    ref = push(socket, "shout", %{"body" => "hi"})
+    assert_reply ref, :ok, %{seq: 1}
+    assert_broadcast "shout", %{body: "hi", seq: 1}
   end
 
   test "broadcasts are pushed to the client", %{socket: socket} do

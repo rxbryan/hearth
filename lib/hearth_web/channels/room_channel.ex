@@ -2,12 +2,9 @@ defmodule HearthWeb.RoomChannel do
   use HearthWeb, :channel
 
   @impl true
-  def join("room:lobby", payload, socket) do
-    if authorized?(payload) do
-      {:ok, socket}
-    else
-      {:error, %{reason: "unauthorized"}}
-    end
+  def join("room:" <> name, _payload, socket) do
+    Hearth.Room.ensure_started(name)
+    {:ok, assign(socket, :room, name)}
   end
 
   # Channels can be used in a request/response fashion
@@ -20,13 +17,8 @@ defmodule HearthWeb.RoomChannel do
   # It is also common to receive messages from the client and
   # broadcast to everyone in the current topic (room:lobby).
   @impl true
-  def handle_in("shout", payload, socket) do
-    broadcast(socket, "shout", payload)
-    {:noreply, socket}
-  end
-
-  # Add authorization logic here as required.
-  defp authorized?(_payload) do
-    true
+  def handle_in("shout", %{"body" => body}, socket) do
+    {:ok, seq} = Hearth.Room.post(socket.assigns.room, body)
+    {:reply, {:ok, %{seq: seq}}, socket}
   end
 end
