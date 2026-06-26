@@ -32,6 +32,15 @@ defmodule Hearth.Access.Token do
     end
   end
 
+  @doc "Verify a token's signature and decode its claims, without pre-binding a room."
+  def verify_owner(token) do
+    case Phoenix.Token.verify(HearthWeb.Endpoint, @salt, token, max_age: :infinity) do
+      {:ok, %{role: :owner} = claims} -> {:ok, claims}
+      {:ok, _} -> {:error, :not_owner_token}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
   defp expired?(%{exp: exp}), do: System.system_time(:second) >= exp
   defp expired?(_), do: false
 end
