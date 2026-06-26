@@ -7,9 +7,9 @@ defmodule Hearth.Access.Token do
   """
   @salt "hearth room access"
 
-  @doc "Long-lived owner capability for a room. Can later authorize minting invites."
-  def mint_owner(room) do
-    Phoenix.Token.sign(HearthWeb.Endpoint, @salt, %{room: room, role: :owner})
+  @doc "Long-lived owner capability for a room. Can later authorize minting of invites."
+  def mint_owner(room, secret) do
+    Phoenix.Token.sign(HearthWeb.Endpoint, @salt, %{room: room, role: :owner, secret: secret})
   end
 
   @doc "Short-lived invite capability."

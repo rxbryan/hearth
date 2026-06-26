@@ -3,14 +3,14 @@ defmodule Hearth.Access.TokenTest do
   alias Hearth.Access.Token
 
   test "an owner token verifies for its room and never expires" do
-    t = Token.mint_owner("lobby")
+    t = Token.mint_owner("lobby", "test-secret")
     assert {:ok, %{room: "lobby", role: :owner}} = Token.verify("lobby", t)
   end
 
   # The design guarantees this behaviour since the room is in the
   # token payload.
   test "a token for one room is rejected for another" do
-    t = Token.mint_owner("lobby")
+    t = Token.mint_owner("lobby", "test-secret")
     assert {:error, :wrong_room} = Token.verify("other", t)
   end
 
