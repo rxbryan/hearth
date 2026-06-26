@@ -16,6 +16,7 @@ defmodule Hearth.Application do
       # {Hearth.Worker, arg},
       # Start to serve requests, typically the last entry
       {Registry, keys: :unique, name: Hearth.RoomRegistry},
+      Hearth.MessageStore,
       {DynamicSupervisor, name: Hearth.RoomSupervisor, strategy: :one_for_one},
       HearthWeb.Endpoint
     ]
