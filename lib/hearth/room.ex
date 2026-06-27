@@ -13,6 +13,9 @@ defmodule Hearth.Room do
 
   def history(name), do: GenServer.call(via(name), :history)
 
+  # returns new messages since last seen.
+  def replay(name, since_seq), do: GenServer.call(via(name), {:replay, since_seq})
+
   def whereis(name) do
     case Registry.lookup(Hearth.RoomRegistry, name) do
       [{pid, _}] -> pid
@@ -52,5 +55,15 @@ defmodule Hearth.Room do
   @impl true
   def handle_call(:history, _from, state) do
     {:reply, Enum.reverse(state.buffer), state}
+  end
+
+  @impl true
+  def handle_call({:replay, since_seq}, _from, state) do
+    missed =
+      state.buffer
+      |> Enum.reverse()
+      |> Enum.filter(&(&1.seq > since_seq))
+
+    {:reply, missed, state}
   end
 end

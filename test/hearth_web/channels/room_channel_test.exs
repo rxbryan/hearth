@@ -40,4 +40,26 @@ defmodule HearthWeb.RoomChannelTest do
     assert_reply ref, :ok
     assert_broadcast "presence_diff", _diff
   end
+
+  test "joining with since_seq replays missed messages", %{socket: socket} do
+    push(socket, "shout", %{"body" => "one"})
+    push(socket, "shout", %{"body" => "two"})
+
+    assert_reply push(socket, "shout", %{"body" => "marker"}), :ok
+
+    token = Hearth.Access.Token.mint_owner("lobby", "test-secret")
+
+    {:ok, _, _socket2} =
+      HearthWeb.UserSocket
+      |> socket("user_2", %{})
+      |> subscribe_and_join(HearthWeb.RoomChannel, "room:lobby", %{
+        "token" => token,
+        "since_seq" => 1
+      })
+
+    assert_push "replay", %{messages: msgs}
+    seqs = Enum.map(msgs, & &1.seq)
+    assert 2 in seqs
+    refute 1 in seqs
+  end
 end

@@ -9,9 +9,10 @@ defmodule HearthWeb.RoomChannel do
       # not track identity
       # TODO: generate fun tags, if user fails to supply identity
       who = Map.get(payload, "who", "anon-#{System.unique_integer([:positive])}")
+      since = Map.get(payload, "since_seq", 0)
       Hearth.Room.ensure_started(name)
       send(self(), :after_join)
-      {:ok, assign(socket, room: name, who: who)}
+      {:ok, assign(socket, room: name, who: who, since_seq: since)}
     else
       {:error, reason} -> {:error, %{reason: to_string(reason)}}
     end
@@ -51,6 +52,11 @@ defmodule HearthWeb.RoomChannel do
       })
 
     push(socket, "presence_state", HearthWeb.Presence.list(socket))
+
+    # batch and replay anything the client missed since its last-seen sequence
+    missed = Hearth.Room.replay(socket.assigns.room, socket.assigns.since_seq)
+    if missed != [], do: push(socket, "replay", %{messages: missed})
+
     {:noreply, socket}
   end
 
