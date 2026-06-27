@@ -7,5 +7,8 @@ defmodule HearthWeb.Router do
 
   scope "/api", HearthWeb do
     pipe_through :api
+
+    post "/rooms", RoomController, :claim
+    post "/rooms/:room/invites", InviteController, :create
   end
 end
