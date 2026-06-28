@@ -15,13 +15,20 @@ defmodule Hearth.MessageStore do
 
   @doc "Write-through to both postgres and cache."
   def append(room, %{seq: seq} = msg) do
+    # TODO: Limit cache size. ETS currently grows unbounded
     :ets.insert(@table, {{room, seq}, msg})
+
+    # TODO: If this match fails, the table survives leaving us an orphaned row
+    # since the table is not owned by the crashing room. On rehydration
+    # the room serves a message that is not durably stored or even ack
+    # as received, the raise propagates upwards killing the socket.
     {:ok, _} = Messages.insert(room, seq, msg.body)
     :ok
   end
 
   @doc "Recent tail, oldest-first. ETS first; fall through to Postgres on a cold cache."
   def recent(room, limit \\ @tail) do
+    # TODO: query DB if cache size < limit
     case ets_recent(room, limit) do
       [] -> warm_from_db(room, limit)
       msgs -> msgs

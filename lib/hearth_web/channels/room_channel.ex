@@ -9,6 +9,8 @@ defmodule HearthWeb.RoomChannel do
       # not track identity
       # TODO: generate fun tags, if user fails to supply identity
       who = Map.get(payload, "who", "anon-#{System.unique_integer([:positive])}")
+
+      # TODO: validate that since_seq is an integer or coerce
       since = Map.get(payload, "since_seq", 0)
       Hearth.Room.ensure_started(name)
       send(self(), :after_join)
@@ -25,10 +27,9 @@ defmodule HearthWeb.RoomChannel do
     {:reply, {:ok, payload}, socket}
   end
 
-  # It is also common to receive messages from the client and
-  # broadcast to everyone in the current topic (room:lobby).
+  # The sender receives the message twice.
   @impl true
-  def handle_in("shout", %{"body" => body}, socket) do
+  def handle_in("message", %{"body" => body}, socket) do
     {:ok, seq} = Hearth.Room.post(socket.assigns.room, body)
     {:reply, {:ok, %{seq: seq}}, socket}
   end

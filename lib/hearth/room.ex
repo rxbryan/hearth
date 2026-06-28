@@ -27,6 +27,8 @@ defmodule Hearth.Room do
 
   @impl true
   def init(name) do
+    # TODO: buffer grows unbounded,
+    # maybe make it a tail cache or just serve history/replay from messagestore?
     {:ok, %{name: name, seq: 0, buffer: []}, {:continue, :load}}
   end
 
@@ -48,7 +50,7 @@ defmodule Hearth.Room do
     seq = state.seq + 1
     msg = %{body: body, seq: seq}
     :ok = Hearth.MessageStore.append(state.name, msg)
-    HearthWeb.Endpoint.broadcast("room:" <> state.name, "shout", msg)
+    HearthWeb.Endpoint.broadcast("room:" <> state.name, "message", msg)
     {:reply, {:ok, seq}, %{state | seq: seq, buffer: [msg | state.buffer]}}
   end
 
